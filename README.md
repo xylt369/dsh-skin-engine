@@ -81,7 +81,7 @@ dsh plugin --profile web remove @yeesy369/dsh-skin-engine
 
 然后重启 `dsh web`。
 
-### 想用本地文件夹安装，不发布 npm？
+### 拿到的是本地文件夹，而不是 npm 包？
 
 ```bash
 dsh plugin --profile web add file:/path/to/dsh-skin-engine
@@ -120,20 +120,6 @@ dsh plugin --profile <你的 profile 名> add @yeesy369/dsh-skin-engine
 - 动态背景画在一个全屏 `canvas` 上，用 `requestAnimationFrame` 驱动
 - 所有 DOM、事件、token 覆盖都会在插件卸载时清理
 
-## 开发与发布
+## 许可证
 
-本项目是纯客户端插件，不需要构建步骤。
-
-发布前检查包内容：
-
-```bash
-npm pack --dry-run
-```
-
-发布到 npm：
-
-```bash
-npm publish --access public
-```
-
-许可证：MIT。
+MIT
