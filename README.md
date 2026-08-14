@@ -1,6 +1,9 @@
 # 🎨 dsh-skin-engine（换肤中心）
 
-给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web UI 换皮肤的客户端插件：
+给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web UI 换皮肤的客户端插件。
+
+- **npm**：[`@yeesy369/dsh-skin-engine`](https://www.npmjs.com/package/@yeesy369/dsh-skin-engine)
+- **GitHub**：[`xylt369/dsh-skin-engine`](https://github.com/xylt369/dsh-skin-engine)
 
 - **上传背景图**：点击选择或拖拽 jpg/png/webp/gif，整个应用立即变成你的皮肤
 - **智能取色**：自动从图片提取主色/强调色/明暗，面板、输入框、气泡、菜单、按钮等全部主题 token 跟随换肤，文字自动黑白
@@ -75,4 +78,5 @@ node install.mjs --file /path/to/dsh-skin-engine
 
 ## 版本历史
 
+- **0.1.1** 发布到 npm 与 GitHub；README 补充仓库链接
 - **0.1.0** 初始发布：上传背景图 + 智能取色 + 6 个 2D 光标动画 + 全量 token 换肤
