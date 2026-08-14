@@ -1,6 +1,6 @@
 # dsh-skin-engine bundle patch: mounts the 换肤中心 client plugin.
 # Applied automatically when this package is listed in the profile's
-# dsh.profile.bundles (see README.md / install.mjs).
+# dsh.profile.bundles (see README.md / dsh-skin-engine.mjs).
 - insert:
     - id: ui-skin-engine
       name: '@yeesy369/dsh-skin-engine'

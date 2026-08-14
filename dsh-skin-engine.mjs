@@ -16,11 +16,11 @@ function printHelp() {
 dsh-skin-engine 安装器
 
 用法：
-  node install.mjs                        # 使用当前包版本，写入 npm 依赖并安装
-  node install.mjs --version <range>      # 指定 npm 版本范围
-  node install.mjs --file <path>          # 使用本地文件夹作为依赖
-  node install.mjs --status               # 查看当前安装状态
-  node install.mjs --uninstall            # 卸载
+  node dsh-skin-engine.mjs                # 使用当前包版本，写入 npm 依赖并安装
+  node dsh-skin-engine.mjs --version <range>   # 指定 npm 版本范围
+  node dsh-skin-engine.mjs --file <path>       # 使用本地文件夹作为依赖
+  node dsh-skin-engine.mjs --status            # 查看当前安装状态
+  node dsh-skin-engine.mjs --uninstall         # 卸载
 
 参数：
   --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^0.2.0

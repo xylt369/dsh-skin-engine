@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "lib/index.js",
   "bin": {
-    "dsh-skin-engine": "./install.mjs"
+    "dsh-skin-engine": "./dsh-skin-engine.mjs"
   },
   "exports": {
     ".": {
@@ -41,7 +41,7 @@
     "cordis.patch.yml",
     "README.md",
     "LICENSE",
-    "install.mjs"
+    "dsh-skin-engine.mjs"
   ],
   "dsh": {
     "bundle": {
