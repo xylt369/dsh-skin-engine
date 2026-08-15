@@ -11,6 +11,7 @@
 - **10 种光标动态背景**：静态、光晕跟随、涟漪扩散、粒子拖尾、极光流动、星空视差，以及 4 个 Genesis 光标引擎预置——量子霓虹（RGB 色散）、液态水银（Verlet 质点链 + 果冻粘连）、星尘引力（引力涡流粒子）、包豪斯网格（网格吸附 + 磁吸边框）
 - **效果调节**：图片不透明度、面板通透度、背景模糊、暗化程度四个滑杆
 - **自动保存**：皮肤（图片 + 全部设置）保存在本机浏览器，刷新页面后自动恢复；图片过大时自动压缩后保存
+- **预设扩展体系**：每个预设是一个独立文件（统一格式），可从换肤中心直接加载、命令行安装，或提交进官方仓库；别人不用写插件，只写特效代码
 - **随时还原**：支持移除图片、恢复默认
 - **兼容降级**：运行时自动检测 dsh 客户端能力，缺少主题/插槽接口时降级运行而不是报错
 
@@ -63,6 +64,7 @@ dsh web
 | 拖动「背景模糊」滑杆 | 模糊背景图片 |
 | 拖动「暗化程度」滑杆 | 加深背景暗色，突出前景内容 |
 | 刷新页面 / 重启 `dsh web` | 自动恢复上次的皮肤 |
+| 点「＋添加预设」 | 粘贴源码或选择 `.js` 文件，加载第三方/自制预设（自动保存） |
 | 点「移除图片」 | 恢复 dsh 默认外观（同时清掉已保存的图片） |
 | 点「恢复默认」 | 重置所有皮肤设置（同时清掉已保存的皮肤） |
 
@@ -78,6 +80,44 @@ dsh web
 | 包豪斯网格 | 8px 模块化网格吸附 + 磁吸吸附 | 白色方块在 8px 网格上跳动，靠近按钮/链接时吸附到其边界盒（`mix-blend-mode: difference`） |
 
 工程实现遵循设计文档的性能原则：事件只更新目标坐标、物理与渲染统一由 `requestAnimationFrame` 驱动；DOM 光标用 `translate3d` + `will-change` 走 GPU 合成层；粒子定长预分配，运行时不做 `new`/`push`/`splice`；触摸屏（`(hover: none) and (pointer: coarse)`）自动关闭光标渲染管线以省电。
+
+## 预设扩展体系（自己写特效，不写插件）
+
+dsh 客户端插件无法 require 外部文件，所以插件内置了 10 个预设，同时提供**统一的预设格式**：一个 `.js` 文件 = 一套特效，注册到全局注册表即可，不需要了解任何 dsh/Cordis 机制。完整格式文档见 [docs/PRESET_FORMAT.md](docs/PRESET_FORMAT.md)，官方预设的独立形态在 [`presets/`](presets/) 目录（与内置 10 个同源，可直接下载改造）。
+
+```js
+window.__DSH_SKIN_PRESETS__ = window.__DSH_SKIN_PRESETS__ || {};
+window.__DSH_SKIN_PRESETS__['my-preset'] = {
+  id: 'my-preset',
+  name: '我的预设',
+  desc: '一句话描述',
+  render: function (ctx) {   // 每帧调用；ctx.g 是垫在应用之下的透明 canvas
+    ctx.g.arc(ctx.mx, ctx.my, 20, 0, Math.PI * 2);
+    ctx.g.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.g.fill();
+  },
+  // 可选：onEnter / onExit / onPointerMove / onPointerDown / canvasFilter
+};
+```
+
+三种装载方式：
+
+| 方式 | 操作 | 生效 |
+| --- | --- | --- |
+| 换肤中心 UI | 「＋添加预设」→ 粘贴源码或选择 `.js` 文件 | 立即生效，自动保存到 localStorage |
+| 命令行 | `dsh-skin-engine preset add ./my-preset.js`（支持 URL） | 写入 profile 并注册为独立插件包，重启 dsh 生效 |
+| npm 包 | 作者发布预设包，用户 `dsh plugin --profile web add <包名>` | 重启 dsh 生效 |
+
+命令行预设工具：
+
+```bash
+dsh-skin-engine preset validate ./presets/xxx.js   # 校验格式（提 PR 前必跑）
+dsh-skin-engine preset add ./presets/xxx.js        # 安装到 profile
+dsh-skin-engine preset pack ./presets/xxx.js       # 生成可发布 npm 包结构
+dsh-skin-engine preset list / remove <id>          # 管理已安装的预设
+```
+
+**提交你的预设**：复制 `presets/template.js` 改好，跑 `preset validate`，把文件放进 `presets/` 目录提 Pull Request 即可——审核通过后会收录为官方预设（内嵌进插件本体）。**安全提醒**：第三方预设会在你的页面里直接执行，只加载可信来源，UI 加载前有确认提示。
 
 ## 常见问题
 
@@ -147,16 +187,19 @@ dsh plugin --profile <profile 名> add @yeesy369/dsh-skin-engine
 
 | 文件 | 作用 |
 | --- | --- |
-| `lib/client.js` | 浏览器半区，换肤中心全部逻辑（含持久化与兼容性检测） |
+| `lib/client.js` | 浏览器半区，换肤中心全部逻辑（预设引擎 + 持久化 + 兼容性检测） |
 | `lib/index.js` | node 半区，空的 `apply`，让插件进入 cordis/Loader |
 | `cordis.patch.yml` | 包被列入 profile bundles 时自动插入 `ui-skin-engine` |
 | `package.json` | 插件元数据、`dsh.client` 声明、`dsh.compat` 兼容范围、`exports` |
-| `dsh-skin-engine.mjs` | 独立安装器（含 dsh 版本兼容性检查），等效于 `dsh plugin add` |
+| `dsh-skin-engine.mjs` | 独立安装器（dsh 版本检查 + `preset` 预设子命令） |
+| `presets/` | 官方预设独立形态（10 个）+ `template.js` 模板，均可单独下载/加载 |
+| `docs/PRESET_FORMAT.md` | 预设统一格式文档（第三方写特效的唯一契约） |
 
 ## 工作原理
 
 - 插件通过 `theme.overrideTokens` 把 dsh 的主题 token 全量换成从图片提取的配色
 - 背景层是一个 `z-index:-1` 的全屏层，垫在应用内容下面
+- **预设引擎**：所有动画模式统一走 spec 接口（`render(ctx)` + 生命周期钩子），内置预设内嵌、外部预设走 `window.__DSH_SKIN_PRESETS__` 全局注册表、本地自定义预设存 localStorage，三路合一
 - 动态背景绘制在一个全屏 `canvas` 上，用 `requestAnimationFrame` 驱动；事件只更新光标目标坐标，物理与渲染统一在帧循环内完成（文档要求）
 - Genesis 预置遵循性能原则：粒子定长预分配（对象池）、DOM 光标走 `translate3d` + `will-change`、触摸屏自动关闭光标渲染管线
 - 皮肤保存在浏览器 localStorage（`dsh.skin.state.v1` / `dsh.skin.image.v1`），启动时自动恢复，超配额时压缩重试
