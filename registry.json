@@ -1,5 +1,0 @@
-{
-  "format": 1,
-  "note": "dsh-skin-engine 社区预设注册表。任何人通过 Pull Request 在 presets 数组加一行即可上榜（引擎不内嵌社区预设，仅通过本文件发现与安装）。提交指南见 COMMUNITY.md。",
-  "presets": []
-}
