@@ -42,7 +42,10 @@
     "cordis.patch.yml",
     "README.md",
     "LICENSE",
-    "open-theme.mjs"
+    "open-theme.mjs",
+    "presets",
+    "demo",
+    "docs"
   ],
   "dsh": {
     "bundle": {
