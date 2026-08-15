@@ -25,7 +25,7 @@ open-theme 安装器
   node open-theme.mjs --uninstall         # 卸载
 
 参数：
-  --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^1.1.2
+  --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^1.1.3
   --file, -f <path>       本地包路径（写入 file: 依赖，无需 npm 发布）
   --profile, -p <name>    dsh profile 名称，默认 web（可用 DSH_PROFILE 覆盖）
   --dsh-home <path>       dsh 根目录，默认 ~/.dsh（可用 DSH_HOME 覆盖）
@@ -100,7 +100,7 @@ async function readOwnVersion() {
       // 继续尝试下一个位置
     }
   }
-  return '1.1.2';
+  return '1.1.3';
 }
 
 // ---------- dsh 版本兼容性检查 ----------

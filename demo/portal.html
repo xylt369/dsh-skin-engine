@@ -69,13 +69,14 @@
 
   <script src="../presets/portal.js"></script>
   <script>
-    // 独立模式：自驱动 RAF（autoLoop 默认开启）
-    var lens = new window.PortalLens();
+    // 独立模式：自驱动 RAF（autoLoop 默认开启）；演示页隐藏原生光标、透镜作为光标
+    var lens = new window.PortalLens({ hideNative: true });
     lens.start();
     window.__OT_LENS__ = lens;
 
     document.getElementById('thinking').addEventListener('change', function (e) {
       lens.setThinking(e.target.checked);
+      window.__OT_AGENT__ = { running: e.target.checked }; // 同步到模拟 agent 状态
     });
 
     // 声明式 data 属性同样生效（观察 html[data-ot-thinking]）
@@ -83,6 +84,10 @@
       lens.setThinking(document.documentElement.getAttribute('data-ot-thinking') === 'true');
     });
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ot-thinking'] });
+
+    // 在 dsh 里：node 半区监听 agent/status 后写入 window.__OT_AGENT__，
+    // 透镜光环随 Agent 思考自动点亮/熄灭（本演示页手动切换等同效果）
+    window.__OT_AGENT__ = { running: false };
   </script>
 </body>
 </html>

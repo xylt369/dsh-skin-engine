@@ -18,11 +18,12 @@
   // 改为直接半透明叠加 + 取色描边光晕，浅色/深色背景都可见。
   const LENS_CSS = `
 .ot-lens{position:fixed;left:0;top:0;pointer-events:none;z-index:2147483000;will-change:transform;
-  display:flex;align-items:center;border-radius:999px;
+  display:flex;align-items:center;border-radius:999px;opacity:.65;
   background:rgba(255,255,255,.22);
   -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
   box-shadow:inset 0 0 0 .5px rgba(255,255,255,.6),inset 0 0 12px rgba(255,255,255,.10),
     0 6px 24px rgba(0,0,0,.10),0 16px 48px rgba(0,0,0,.06)}
+.ot-lens-thinking{opacity:1}
 .ot-lens-dot{width:4px;height:4px;border-radius:50%;background:rgba(52,52,60,.85);flex:none;margin-left:12px}
 .ot-lens-label{flex:1;min-width:0;text-align:center;white-space:nowrap;
   font:500 11.5px/1 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
@@ -76,6 +77,7 @@
   class PortalLens {
     constructor(opts) {
       this.opts = opts || {};
+      const wantHide = this.opts.hideNative !== undefined ? !!this.opts.hideNative : false;
       this.state = {
         x: 0, y: 0, tx: 0, ty: 0,
         px: 0, py: 0,
@@ -83,7 +85,7 @@
         press: 0,
         expand: 0, targetExpand: 0,
         thinking: false,
-        hideNative: true,
+        hideNative: wantHide, // 默认保留系统光标：透镜是低调的能量指示器，不是光标替身
         size: 28, pillW: 28, labelW: 0,
         hoverEl: null,
         hue: -1, // -1 = 首帧强制写入取色描边
@@ -128,6 +130,8 @@
       s.x = s.tx = window.innerWidth / 2;
       s.y = s.ty = window.innerHeight / 2;
       s.px = s.x; s.py = s.y;
+      // 构造时指定 hideNative（demo 用）→ 立即生效，无需等 tick 对比
+      if (s.hideNative && document.documentElement) document.documentElement.classList.add('ot-lens-hide-cursor');
       this.running = true;
       this.lastT = performance.now();
       if (this.opts.autoLoop !== false) this.raf = requestAnimationFrame(this._loop);
@@ -159,11 +163,15 @@
       const stretch = (p.stretch !== undefined ? p.stretch : 0.25) * 0.001;
       const ambience = p.ambience !== undefined ? p.ambience : 0.18;
       if (p.size !== undefined && p.size !== s.size) { s.size = p.size; this._measure(); }
-      const hideNative = p.hideNative === undefined ? true : !!p.hideNative;
+      const hideNative = p.hideNative === undefined ? false : !!p.hideNative;
       if (hideNative !== s.hideNative) {
         s.hideNative = hideNative;
         if (document.documentElement) document.documentElement.classList.toggle('ot-lens-hide-cursor', hideNative);
       }
+      // Agent 思考态联动：主引擎轮询 host 的 agent/status 写入 window.__OT_AGENT__，
+      // 这里只做状态比较，变化时点亮/熄灭思考光环（demo 手动 setThinking 同样生效）
+      const agentRunning = !!(typeof window !== 'undefined' && window.__OT_AGENT__ && window.__OT_AGENT__.running);
+      if (agentRunning !== s.thinking) this.setThinking(agentRunning);
       const dt = Math.min(0.05, this.lastT ? (t - this.lastT) / 1000 : 0.016);
       this.lastT = t;
       // 透镜：高阻尼低刚度 LERP（帧率无关）
@@ -312,7 +320,7 @@
       { key: 'size', label: '透镜大小 Size', min: 20, max: 40, step: 1, default: 28 },
       { key: 'ambience', label: '氛围光强度', min: 0, max: 0.4, step: 0.01, default: 0.18 },
       { key: 'stretch', label: '形变 Stretch', min: 0, max: 0.5, step: 0.01, default: 0.25 },
-      { key: 'hideNative', label: '隐藏原生光标', min: 0, max: 1, step: 1, default: 1 },
+      { key: 'hideNative', label: '隐藏原生光标', min: 0, max: 1, step: 1, default: 0 },
     ],
     onEnter: function () {
       window.__OT_LENS__ = new PortalLens({ autoLoop: false });
