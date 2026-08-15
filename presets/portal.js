@@ -14,10 +14,12 @@
   'use strict';
 
   // ---------- 样式（自包含注入，防重复） ----------
+  // 可见性策略：氛围光/透镜不依赖 mix-blend（screen 在浅色界面上等于隐形），
+  // 改为直接半透明叠加 + 取色描边光晕，浅色/深色背景都可见。
   const LENS_CSS = `
 .ot-lens{position:fixed;left:0;top:0;pointer-events:none;z-index:2147483000;will-change:transform;
   display:flex;align-items:center;border-radius:999px;
-  background:rgba(255,255,255,.14);
+  background:rgba(255,255,255,.22);
   -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
   box-shadow:inset 0 0 0 .5px rgba(255,255,255,.6),inset 0 0 12px rgba(255,255,255,.10),
     0 6px 24px rgba(0,0,0,.10),0 16px 48px rgba(0,0,0,.06)}
@@ -31,9 +33,9 @@
 .ot-lens-thinking .ot-lens-halo{animation:ot-lens-breath 2.6s ease-in-out infinite}
 @keyframes ot-lens-breath{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.85;transform:scale(1.22)}}
 .ot-lens-hide-cursor,.ot-lens-hide-cursor *{cursor:none!important}
-.ot-db{position:fixed;inset:0;pointer-events:none;z-index:2147482990;overflow:hidden;opacity:.3}
-.ot-db-glow{position:absolute;border-radius:50%;will-change:transform;filter:blur(70px);mix-blend-mode:screen}
-.ot-db-orb{position:absolute;border-radius:50%;will-change:transform;mix-blend-mode:screen}`;
+.ot-db{position:fixed;inset:0;pointer-events:none;z-index:2147482990;overflow:hidden;opacity:.35}
+.ot-db-glow{position:absolute;border-radius:50%;will-change:transform;filter:blur(60px)}
+.ot-db-orb{position:absolute;border-radius:50%;will-change:transform}`;
 
   // ---------- 工具 ----------
   function hslToRgb(h, s, l) {
@@ -84,7 +86,7 @@
         hideNative: true,
         size: 28, pillW: 28, labelW: 0,
         hoverEl: null,
-        hue: 260,
+        hue: -1, // -1 = 首帧强制写入取色描边
         // 氛围光层锚点（视口比例）与当前坐标：0 = 光晕，1..3 = 色斑
         amb: [
           { ax: 0.5, ay: 0.5, px: 0.5, py: 0.5, k: 0.35, s: 900 },
@@ -198,17 +200,25 @@
       const w = window.innerWidth;
       const h = window.innerHeight;
       if (!this.db || !this.dbLayers.length || !w || !h) return;
-      const hue = colors ? accentHueOf(colors) : s.hue;
+      const hue = colors ? accentHueOf(colors) : (s.hue < 0 ? 260 : s.hue);
+      // 透镜描边光晕：取色 hue 派生，换图换色（仅在 hue 变化时重写 box-shadow）
+      if (hue !== s.hue) {
+        s.hue = hue;
+        const ring = hslToRgb(hue, 0.65, 0.7);
+        this.el.style.boxShadow =
+          'inset 0 0 0 .5px rgba(255,255,255,.6), 0 0 0 1px rgba(' + ring.join(',') + ',.45),' +
+          ' 0 0 24px rgba(' + ring.join(',') + ',.30), 0 6px 24px rgba(0,0,0,.10), 0 16px 48px rgba(0,0,0,.06)';
+      }
       const mx = s.tx / w;
       const my = s.ty / h;
       const cols = [hslToRgb(hue, 0.85, 0.68), hslToRgb(hue + 120, 0.8, 0.62), hslToRgb(hue + 240, 0.75, 0.66)];
-      this.db.style.opacity = Math.min(0.5, ambience * 1.6).toFixed(3);
+      this.db.style.opacity = Math.min(0.6, ambience * 2.2).toFixed(3);
       for (let i = 0; i < s.amb.length; i++) {
         const amb = s.amb[i];
         const layer = this.dbLayers[i];
-        // 锚点缓慢漂移
-        amb.ax += Math.sin(t * 0.0001 + i * 2.1) * 0.000012 * dt * 60;
-        amb.ay += Math.cos(t * 0.00013 + i * 1.7) * 0.000012 * dt * 60;
+        // 锚点漂移（幅度 ×100，让"实时流动"肉眼可见）
+        amb.ax += Math.sin(t * 0.0001 + i * 2.1) * 0.0012 * dt * 60;
+        amb.ay += Math.cos(t * 0.00013 + i * 1.7) * 0.0012 * dt * 60;
         // 目标 = 锚点 + 光标视差；平滑跟随
         const tx = amb.ax + (mx - 0.5) * amb.k;
         const ty = amb.ay + (my - 0.5) * amb.k;
@@ -219,10 +229,11 @@
         const y = amb.py * h;
         const rad = amb.s * (0.6 + 0.4 * Math.abs(Math.sin(t * 0.0002 + i)));
         if (i === 0) {
-          layer.style.background = 'radial-gradient(circle, rgba(' + cols[0].join(',') + ',0.30), transparent 70%)';
+          // 光晕：直接半透明叠加（不依赖 blend，浅色/深色都可见）
+          layer.style.background = 'radial-gradient(circle, rgba(' + cols[0].join(',') + ',0.16), transparent 70%)';
         } else {
           const col = cols[(i - 1) % 3];
-          layer.style.background = 'radial-gradient(circle, rgba(' + col.join(',') + ',0.42), transparent 72%)';
+          layer.style.background = 'radial-gradient(circle, rgba(' + col.join(',') + ',0.22), transparent 72%)';
         }
         layer.style.width = rad + 'px';
         layer.style.height = rad + 'px';
