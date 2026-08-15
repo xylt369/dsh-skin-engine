@@ -1,12 +1,12 @@
 {
-  "name": "@yeesy369/dsh-skin-engine",
-  "version": "0.8.0",
-  "description": "换肤中心 skin-engine：上传背景图作为 DSH 应用皮肤，叠加多种光标交互动态背景（skin / theme / background plugin for DeepSeek Harness web UI）",
+  "name": "@yeesy369/open-theme",
+  "version": "0.9.0",
+  "description": "Open Theme：给 DeepSeek Harness（dsh）Web UI 换皮肤的客户端插件——上传背景图自动取色换肤，支持自定义特效预设（skin / theme / background plugin for DeepSeek Harness web UI）",
   "type": "module",
   "license": "MIT",
   "main": "lib/index.js",
   "bin": {
-    "dsh-skin-engine": "./dsh-skin-engine.mjs"
+    "open-theme": "./open-theme.mjs"
   },
   "exports": {
     ".": {
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xylt369/dsh-skin-engine.git"
+    "url": "git+https://github.com/xylt369/open-theme.git"
   },
   "keywords": [
     "dsh",
@@ -28,7 +28,8 @@
     "plugin",
     "skin",
     "theme",
-    "background"
+    "background",
+    "open-theme"
   ],
   "publishConfig": {
     "access": "public"
@@ -41,7 +42,7 @@
     "cordis.patch.yml",
     "README.md",
     "LICENSE",
-    "dsh-skin-engine.mjs"
+    "open-theme.mjs"
   ],
   "dsh": {
     "bundle": {

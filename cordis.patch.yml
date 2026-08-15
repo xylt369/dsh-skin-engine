@@ -1,6 +1,6 @@
-# dsh-skin-engine bundle patch: mounts the 换肤中心 client plugin.
+# open-theme bundle patch: mounts the Open Theme client plugin.
 # Applied automatically when this package is listed in the profile's
-# dsh.profile.bundles (see README.md / dsh-skin-engine.mjs).
+# dsh.profile.bundles (see README.md / open-theme.mjs).
 - insert:
-    - id: ui-skin-engine
-      name: '@yeesy369/dsh-skin-engine'
+    - id: ui-open-theme
+      name: '@yeesy369/open-theme'

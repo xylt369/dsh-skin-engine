@@ -1,6 +1,6 @@
 # 自定义预设格式（Preset Format）
 
-> 想给换肤中心加一个自己的光标特效？你只需要写**一个 `.js` 文件**。
+> 想给Open Theme加一个自己的光标特效？你只需要写**一个 `.js` 文件**。
 > 不用懂 dsh、Cordis 或插件机制——文件格式就两种东西：注册一句 + 画一个函数。
 
 ## 1. 一个预设长什么样
@@ -40,11 +40,12 @@ window.__DSH_SKIN_PRESETS__['my-preset'] = {
 | `onPointerMove(e)` | function | 可选 | 光标移动（原生 pointermove 事件） |
 | `onPointerDown(e)` | function | 可选 | 按下（原生 pointerdown 事件） |
 | `canvasFilter` | string | 可选 | canvas 需要套 CSS 滤镜时返回字符串，如 `'blur(10px) contrast(20)'`（果冻粘连） |
+| `params` | array | 可选 | 可调参数声明：`[{ key, label, min, max, step, default }]`。声明后引擎会把当前值合并进 `ctx.params`（含默认值），供 `render` 读取；用户在面板里拖动滑杆调节并自动保存 |
 
 约定：
 
 - **状态放闭包，不放全局**：多次加载、切换、卸载都不会串状态。
-- **onEnter/onExit 成对出现**：建了 DOM / 挂了事件，就在 onExit 里删掉（示例见 `presets/bauhaus.js`）。
+- **onEnter/onExit 成对出现**：建了 DOM / 挂了事件，就在 onExit 里删掉（示例见 `presets/template.js`）。
 - **ctx 只读**：`mx/my` 已是平滑后的光标坐标，直接画即可。
 
 ## 3. render 的 ctx 参数
@@ -62,26 +63,23 @@ window.__DSH_SKIN_PRESETS__['my-preset'] = {
 
 | 方式 | 操作 | 生效 |
 | --- | --- | --- |
-| 换肤中心 UI（推荐） | 「＋添加预设」→ 粘贴源码，或「从 .js 文件选择」 | 立即生效，自动保存（刷新后仍在） |
-| 命令行 | `dsh-skin-engine preset add ./my-preset.js`（支持 URL） | 写入 profile 并注册为独立插件包，重启 dsh 生效 |
+| Open Theme UI（推荐） | 「＋添加预设」→ 粘贴源码，或「从 .js 文件选择」 | 立即生效，自动保存（刷新后仍在） |
+| 命令行 | `open-theme preset add ./my-preset.js`（支持 URL） | 写入 profile 并注册为独立插件包，重启 dsh 生效 |
 
-删除：UI 里自定义预设卡片右上角 ✕；命令行 `dsh-skin-engine preset remove my-preset`。
+删除：UI 里自定义预设卡片右上角 ✕；命令行 `open-theme preset remove my-preset`。
 
 ## 5. 命令行工具
 
 ```bash
-dsh-skin-engine preset new my-neon        # 生成一个预设文件骨架（my-neon.js）
-dsh-skin-engine preset validate x.js      # 校验格式（写完先跑一遍）
-dsh-skin-engine preset add x.js           # 安装到 profile
-dsh-skin-engine preset list / remove <id> # 管理已安装的预设
+open-theme preset new my-neon        # 生成一个预设文件骨架（my-neon.js）
+open-theme preset validate x.js      # 校验格式（写完先跑一遍）
+open-theme preset add x.js           # 安装到 profile
+open-theme preset list / remove <id> # 管理已安装的预设
 ```
 
-## 6. 官方示例
+## 6. 起步模板
 
-仓库 `presets/` 目录里是 10 个内置特效的独立文件（与换肤中心内置的同源），最适合拿来改：
-
-- 想改配色/参数 → 复制一个文件，改完加载即可
-- 想写自己的 → 从 `presets/template.js` 起步
+仓库 [`presets/template.js`](../presets/template.js) 是一个可直接加载的预设模板：复制一份，改掉 `id/name/desc`，写你的 `render`，加载即可。`open-theme preset new <id>` 也能直接生成同样的骨架文件。
 
 ## 7. 注意事项
 

@@ -7,7 +7,7 @@ import { join, resolve, dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const PKG_NAME = '@yeesy369/dsh-skin-engine';
+const PKG_NAME = '@yeesy369/open-theme';
 const DEFAULT_PROFILE = process.env.DSH_PROFILE || 'web';
 const DEFAULT_DSH_HOME = process.env.DSH_HOME || join(homedir(), '.dsh');
 // 兼容范围（与 package.json 的 dsh.compat 保持一致）：[min, max)
@@ -15,17 +15,17 @@ const DSH_COMPAT = { min: '0.1.0-rc.6', max: '0.2.0', tested: ['0.1.0-rc.6'] };
 
 function printHelp() {
   console.log(`
-dsh-skin-engine 安装器
+open-theme 安装器
 
 用法：
-  node dsh-skin-engine.mjs                # 使用当前包版本，写入 npm 依赖并安装
-  node dsh-skin-engine.mjs --version <range>   # 指定 npm 版本范围
-  node dsh-skin-engine.mjs --file <path>       # 使用本地文件夹作为依赖
-  node dsh-skin-engine.mjs --status            # 查看当前安装状态
-  node dsh-skin-engine.mjs --uninstall         # 卸载
+  node open-theme.mjs                # 使用当前包版本，写入 npm 依赖并安装
+  node open-theme.mjs --version <range>   # 指定 npm 版本范围
+  node open-theme.mjs --file <path>       # 使用本地文件夹作为依赖
+  node open-theme.mjs --status            # 查看当前安装状态
+  node open-theme.mjs --uninstall         # 卸载
 
 参数：
-  --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^0.7.0
+  --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^0.9.0
   --file, -f <path>       本地包路径（写入 file: 依赖，无需 npm 发布）
   --profile, -p <name>    dsh profile 名称，默认 web（可用 DSH_PROFILE 覆盖）
   --dsh-home <path>       dsh 根目录，默认 ~/.dsh（可用 DSH_HOME 覆盖）
@@ -41,10 +41,10 @@ dsh-skin-engine 安装器
 超出范围的版本会给出警告（--strict 则中止）；运行时插件还会做能力检测并自动降级。
 
 预设子命令（自定义特效，格式见 docs/PRESET_FORMAT.md）：
-  dsh-skin-engine preset new <id>                 生成一个自定义预设文件骨架
-  dsh-skin-engine preset validate <file|url>      校验预设文件是否符合格式
-  dsh-skin-engine preset add <file|url>           安装到 profile（重启 dsh 生效）
-  dsh-skin-engine preset list / remove <id>       管理已安装的预设
+  open-theme preset new <id>                 生成一个自定义预设文件骨架
+  open-theme preset validate <file|url>      校验预设文件是否符合格式
+  open-theme preset add <file|url>           安装到 profile（重启 dsh 生效）
+  open-theme preset list / remove <id>       管理已安装的预设
 `);
 }
 
@@ -100,7 +100,7 @@ async function readOwnVersion() {
       // 继续尝试下一个位置
     }
   }
-  return '0.8.0';
+  return '0.9.0';
 }
 
 // ---------- dsh 版本兼容性检查 ----------
@@ -222,18 +222,18 @@ function printStatus(pkg, pkgPath) {
 }
 
 // ---------- 预设子命令（统一格式见 docs/PRESET_FORMAT.md） ----------
-const PRESET_DIR_NAME = 'dsh-skin-presets';
+const PRESET_DIR_NAME = 'open-theme-presets';
 
 function presetHelp() {
   console.log(`
-dsh-skin-engine preset — 自定义预设工具（格式见 docs/PRESET_FORMAT.md）
+open-theme preset — 自定义预设工具（格式见 docs/PRESET_FORMAT.md）
 
 用法：
-  dsh-skin-engine preset new <id> [--out <dir>]   生成一个自定义预设文件骨架（.js）
-  dsh-skin-engine preset validate <file|url>       校验预设文件是否符合格式
-  dsh-skin-engine preset add <file|url> [--id x]   安装到 profile（包装成独立插件包，重启 dsh 生效）
-  dsh-skin-engine preset list                      列出已安装的预设
-  dsh-skin-engine preset remove <id>               卸载预设
+  open-theme preset new <id> [--out <dir>]   生成一个自定义预设文件骨架（.js）
+  open-theme preset validate <file|url>       校验预设文件是否符合格式
+  open-theme preset add <file|url> [--id x]   安装到 profile（包装成独立插件包，重启 dsh 生效）
+  open-theme preset list                      列出已安装的预设
+  open-theme preset remove <id>               卸载预设
 
 参数：
   --profile, -p <name>    dsh profile 名称，默认 web（可用 DSH_PROFILE 覆盖）
@@ -312,7 +312,7 @@ function assertNpmId(id) {
 
 // 生成迷你插件包装包：package.json + cordis.patch.yml + lib/{index,client}.js
 async function scaffoldPresetWrapper(dir, id, source) {
-  const wrapperName = `dsh-skin-preset-${id}`;
+  const wrapperName = `open-theme-preset-${id}`;
   await mkdir(join(dir, 'lib'), { recursive: true });
   await writeFile(join(dir, 'package.json'), JSON.stringify({
     name: wrapperName,
@@ -363,7 +363,7 @@ async function presetAdd(args, opts) {
   console.log(`校验通过：${v.ids.join('、')}`);
   const id = pickId(v, opts);
   assertNpmId(id);
-  const wrapperName = `dsh-skin-preset-${id}`;
+  const wrapperName = `open-theme-preset-${id}`;
   const dir = join(presetRoot(opts), wrapperName);
   if (opts.dryRun) {
     console.log(`[dry-run] 将生成包装包：${dir}`);
@@ -429,13 +429,13 @@ async function presetNew(args, opts) {
   }
   await writeFile(file, source, 'utf8');
   console.log(`已生成自定义预设文件：${file}`);
-  console.log('加载方式：换肤中心「＋添加预设」→ 从 .js 文件选择（立即生效、自动保存）；或 preset add 该文件（重启生效）。');
+  console.log('加载方式：Open Theme「＋添加预设」→ 从 .js 文件选择（立即生效、自动保存）；或 preset add 该文件（重启生效）。');
 }
 
 async function presetRemove(args, opts) {
   const id = args[0];
   if (!id) { presetHelp(); process.exit(1); }
-  const wrapperName = `dsh-skin-preset-${id}`;
+  const wrapperName = `open-theme-preset-${id}`;
   const dir = join(presetRoot(opts), wrapperName);
   if (opts.dryRun) {
     console.log(`[dry-run] 将移除：${dir}`);

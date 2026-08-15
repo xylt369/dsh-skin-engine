@@ -1,6 +1,6 @@
-// dsh-skin-preset: 模板（Template）— 照着这个写你的第一个预设
-// 统一格式说明见 docs/PRESET_FORMAT.md；写完可直接在换肤中心「＋添加预设」加载，
-// 或命令行安装：dsh-skin-engine preset add ./presets/template.js --id my-preset
+// open-theme-preset: 模板（Template）— 照着这个写你的第一个预设
+// 统一格式说明见 docs/PRESET_FORMAT.md；写完可直接在 Open Theme「＋添加预设」加载，
+// 或命令行安装：open-theme preset add ./presets/template.js --id my-preset
 window.__DSH_SKIN_PRESETS__ = window.__DSH_SKIN_PRESETS__ || {};
 window.__DSH_SKIN_PRESETS__['template'] = {
   // id：唯一标识（字母/数字/-/_，≤48 字符）；与文件里的 key 保持一致
