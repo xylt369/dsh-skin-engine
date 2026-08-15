@@ -169,7 +169,7 @@ dsh plugin --profile <profile 名> add @yeesy369/open-theme
 - 缺 `theme.overrideTokens`：降级为「只显示背景图片和光标动态效果，不覆盖主题配色」；
 - 缺 `slots.inject`：降级为「不注册侧边栏入口和弹窗」。
 
-两种情况都只会在浏览器控制台输出 `[open-theme]` 警告，不会报错崩溃。如果你在未列出的 dsh 版本上使用正常，欢迎在 [Issues](https://github.com/xylt369/open-theme/issues) 里告知，我们会更新支持范围。
+两种情况都只会在浏览器控制台输出 `[open-theme]` 警告，不会报错崩溃。如果你在未列出的 dsh 版本上使用正常，欢迎在 [Issues](https://github.com/xylt369/dsh-open-theme/issues) 里告知，我们会更新支持范围。
 
 **已知限制**：换肤依赖 dsh Web UI 的 DOM 结构（`#root > div:first-child` 透明化 + `z-index:-1` 背景层），dsh 未来大版本改动布局时可能失效——这也是支持范围收窄到 0.1.x 的原因之一。
 
