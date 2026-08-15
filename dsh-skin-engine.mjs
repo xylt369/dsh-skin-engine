@@ -25,7 +25,7 @@ dsh-skin-engine 安装器
   node dsh-skin-engine.mjs --uninstall         # 卸载
 
 参数：
-  --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^0.5.0
+  --version, -v <range>   要写入 package.json 的依赖版本范围，例如 ^0.6.0
   --file, -f <path>       本地包路径（写入 file: 依赖，无需 npm 发布）
   --profile, -p <name>    dsh profile 名称，默认 web（可用 DSH_PROFILE 覆盖）
   --dsh-home <path>       dsh 根目录，默认 ~/.dsh（可用 DSH_HOME 覆盖）
@@ -59,6 +59,7 @@ function parseArgs(argv) {
     dshVersion: null,
     id: null,
     out: null,
+    registry: null,
     status: false,
     uninstall: false,
     noInstall: false,
@@ -76,6 +77,7 @@ function parseArgs(argv) {
     else if (arg === '--dsh-version') opts.dshVersion = argv[++i];
     else if (arg === '--id') opts.id = argv[++i];
     else if (arg === '--out') opts.out = argv[++i];
+    else if (arg === '--registry') opts.registry = argv[++i];
     else if (arg === '--status') opts.status = true;
     else if (arg === '--uninstall') opts.uninstall = true;
     else if (arg === '--no-install') opts.noInstall = true;
@@ -101,7 +103,7 @@ async function readOwnVersion() {
       // 继续尝试下一个位置
     }
   }
-  return '0.5.0';
+  return '0.6.0';
 }
 
 // ---------- dsh 版本兼容性检查 ----------
@@ -224,15 +226,20 @@ function printStatus(pkg, pkgPath) {
 
 // ---------- 预设子命令（统一格式见 docs/PRESET_FORMAT.md） ----------
 const PRESET_DIR_NAME = 'dsh-skin-presets';
+// 社区预设注册表（任何人 PR registry.json 加一行即可上榜，见 COMMUNITY.md）
+const DEFAULT_REGISTRY = 'https://raw.githubusercontent.com/xylt369/dsh-skin-engine/main/registry.json';
 
 function presetHelp() {
   console.log(`
-dsh-skin-engine preset — 预设安装器（统一格式见 docs/PRESET_FORMAT.md）
+dsh-skin-engine preset — 预设平台工具（协议 v1，格式见 docs/PRESET_FORMAT.md）
 
 用法：
-  dsh-skin-engine preset validate <file|url>       校验预设文件是否符合统一格式
+  dsh-skin-engine preset validate <file|url>       校验预设文件是否符合平台协议 v1
   dsh-skin-engine preset add <file|url> [--id x]   校验并安装到 profile（包装成独立插件包）
+  dsh-skin-engine preset new <id>                 生成一个可直接开发的预设包（含 render 骨架）
   dsh-skin-engine preset pack <file> [--out <dir>] 生成可发布的 npm 包结构（不安装）
+  dsh-skin-engine preset search [关键词]            搜索社区注册表（registry.json）
+  dsh-skin-engine preset install <id|npm包名>       从社区注册表安装预设（或直接按 npm 包名安装）
   dsh-skin-engine preset list                      列出已安装的预设
   dsh-skin-engine preset remove <id>               卸载预设
 
@@ -240,7 +247,8 @@ dsh-skin-engine preset — 预设安装器（统一格式见 docs/PRESET_FORMAT.
   --profile, -p <name>    dsh profile 名称，默认 web（可用 DSH_PROFILE 覆盖）
   --dsh-home <path>       dsh 根目录，默认 ~/.dsh
   --id <x>                多预设文件时指定安装哪个（默认取第一个）
-  --out <dir>             pack 的输出目录
+  --out <dir>             pack/new 的输出目录
+  --registry <url>        社区注册表地址（默认 GitHub raw 上的 registry.json）
   --no-install            只生成包装目录，不运行 dsh plugin add/remove
   --dry-run               只打印将执行的内容
   --help, -h              显示本帮助
@@ -250,9 +258,12 @@ dsh-skin-engine preset — 预设安装器（统一格式见 docs/PRESET_FORMAT.
 // 与 lib/client.js 的 validateSpec 保持一致的 node 侧校验
 function validateSpecNode(spec) {
   if (!spec || typeof spec !== 'object') return '预设必须是对象';
+  if (spec.format !== undefined && spec.format !== 1) return 'format 必须是 1（平台协议 v1）';
   if (typeof spec.id !== 'string' || !/^[a-zA-Z0-9_-]{1,48}$/.test(spec.id)) return '缺少合法的 id（字母/数字/-/_，≤48 字符）';
   if (typeof spec.name !== 'string' || !spec.name) return '缺少 name（显示名）';
   if (typeof spec.desc !== 'string') spec.desc = '';
+  if (spec.author !== undefined && typeof spec.author !== 'string') return 'author 必须是字符串';
+  if (spec.version !== undefined && typeof spec.version !== 'string') return 'version 必须是字符串';
   if (spec.render !== undefined && typeof spec.render !== 'function') return 'render 必须是函数';
   if (spec.onEnter !== undefined && typeof spec.onEnter !== 'function') return 'onEnter 必须是函数';
   if (spec.onExit !== undefined && typeof spec.onExit !== 'function') return 'onExit 必须是函数';
@@ -353,7 +364,7 @@ async function presetValidate(input) {
 }
 
 async function presetAdd(args, opts) {
-  const input = args[1];
+  const input = args[0];
   if (!input) { presetHelp(); process.exit(1); }
   const source = await readPresetSource(input);
   const v = validatePresetSource(source);
@@ -378,7 +389,7 @@ async function presetAdd(args, opts) {
 }
 
 async function presetPack(args, opts) {
-  const input = args[1];
+  const input = args[0];
   const outDir = opts.out ? resolve(opts.out) : process.cwd();
   if (!input) { presetHelp(); process.exit(1); }
   const source = await readPresetSource(input);
@@ -417,8 +428,99 @@ async function presetList(opts) {
   if (!found) console.log('未安装任何预设。');
 }
 
+// ---- 社区注册表（registry.json）：发现与安装 ----
+async function fetchRegistry(opts) {
+  const url = opts.registry || DEFAULT_REGISTRY;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`注册表下载失败：HTTP ${res.status}`);
+  const data = await res.json();
+  const list = Array.isArray(data) ? data : (data && Array.isArray(data.presets) ? data.presets : []);
+  if (!Array.isArray(list)) throw new Error('注册表格式不正确（需要数组或 { presets: [...] }）');
+  return list;
+}
+
+async function presetSearch(args, opts) {
+  const kw = String(args[0] || '').toLowerCase();
+  let list;
+  try {
+    list = await fetchRegistry(opts);
+  } catch (e) {
+    console.error(`[error] ${e.message}`);
+    process.exit(1);
+  }
+  const hits = kw
+    ? list.filter((p) =>
+        String(p.id || '').toLowerCase().includes(kw) ||
+        String(p.name || '').toLowerCase().includes(kw) ||
+        String(p.desc || '').toLowerCase().includes(kw))
+    : list;
+  if (!hits.length) { console.log('没有匹配的社区预设。'); return; }
+  for (const p of hits) {
+    console.log(`- ${p.id}  ${p.name}  (${p.package})  by ${p.author || '?'}`);
+    if (p.desc) console.log(`    ${p.desc}`);
+  }
+}
+
+async function presetInstall(args, opts) {
+  const target = args[0];
+  if (!target) { presetHelp(); process.exit(1); }
+  let pkgName = target;
+  // 裸 id（无 @、无 /）：先查社区注册表，命中则解析成 npm 包名
+  if (/^[a-zA-Z0-9_-]+$/.test(target)) {
+    try {
+      const list = await fetchRegistry(opts);
+      const hit = list.find((p) => p.id === target);
+      if (hit && hit.package) pkgName = hit.package;
+    } catch (e) {
+      console.warn(`[warn] 注册表不可用（${e.message}），按 npm 包名处理。`);
+    }
+  }
+  if (opts.dryRun) {
+    console.log(`[dry-run] 将安装：dsh plugin --profile ${opts.profile} add ${pkgName}`);
+    return;
+  }
+  runDshPlugin(opts, ['add', pkgName]);
+  console.log(`已安装 ${pkgName}。请重启 dsh 后，在换肤中心选择对应预设。`);
+}
+
+async function presetNew(args, opts) {
+  const id = args[0];
+  if (!id) { presetHelp(); process.exit(1); }
+  assertNpmId(id);
+  const wrapperName = `dsh-skin-preset-${id}`;
+  const dir = opts.out ? join(resolve(opts.out), wrapperName) : join(process.cwd(), wrapperName);
+  const source = [
+    `// ${wrapperName} — 平台协议 v1 预设（格式见 docs/PRESET_FORMAT.md，社区注册见 COMMUNITY.md）`,
+    'window.__DSH_SKIN_PRESETS__ = window.__DSH_SKIN_PRESETS__ || {};',
+    `window.__DSH_SKIN_PRESETS__['${id}'] = {`,
+    `  format: 1,`,
+    `  id: '${id}',`,
+    `  name: '你的预设名',`,
+    `  desc: '一句话描述',`,
+    `  author: '你的名字',`,
+    `  version: '1.0.0',`,
+    '  render: function (ctx) {',
+    '    // ctx: { g, w, h, mx, my, dt, t, colors } — g 是垫在应用之下的透明 canvas',
+    '    ctx.g.beginPath();',
+    '    ctx.g.arc(ctx.mx, ctx.my, 20, 0, Math.PI * 2);',
+    "    ctx.g.fillStyle = 'rgba(255,255,255,0.5)';",
+    '    ctx.g.fill();',
+    '  },',
+    '  // 可选：onEnter / onExit / onPointerMove / onPointerDown / canvasFilter',
+    '};',
+    '',
+  ].join('\n');
+  if (opts.dryRun) {
+    console.log(`[dry-run] 将生成预设包：${dir}`);
+    return;
+  }
+  await scaffoldPresetWrapper(dir, id, source);
+  console.log(`预设包已生成：${dir}`);
+  console.log('步骤：编辑 render → preset validate lib/client.js → 本地试用 preset add → npm publish → 到 registry.json 加一行（见 COMMUNITY.md）');
+}
+
 async function presetRemove(args, opts) {
-  const id = args[1];
+  const id = args[0];
   if (!id) { presetHelp(); process.exit(1); }
   const wrapperName = `dsh-skin-preset-${id}`;
   const dir = join(presetRoot(opts), wrapperName);
@@ -431,18 +533,36 @@ async function presetRemove(args, opts) {
   console.log(`已移除 ${wrapperName}（请重启 dsh）。`);
 }
 
+// 从子命令参数里提取位置参数（过滤掉 --flag 及其取值，任意顺序皆可）
+const FLAG_WITH_VALUE = new Set(['--profile', '-p', '--dsh-home', '--id', '--out', '--registry', '--version', '-v', '--file', '-f', '--dsh-version']);
+const FLAG_BARE = new Set(['--no-install', '--dry-run', '--strict', '--help', '-h', '--status', '--uninstall']);
+function positionalArgs(args) {
+  const out = [];
+  for (let i = 0; i < args.length; i += 1) {
+    const a = args[i];
+    if (FLAG_WITH_VALUE.has(a)) { i += 1; continue; }
+    if (FLAG_BARE.has(a) || a.startsWith('--') || a.startsWith('-')) continue;
+    out.push(a);
+  }
+  return out;
+}
+
 async function presetMain(args) {
   const action = args[0] || 'help';
   const opts = parseArgs(args.slice(1));
+  const pos = positionalArgs(args.slice(1));
   if (action === 'help' || action === '-h' || action === '--help' || opts.help) {
     presetHelp();
     return;
   }
-  if (action === 'validate') await presetValidate(args[1]);
-  else if (action === 'add') await presetAdd(args, opts);
-  else if (action === 'pack') await presetPack(args, opts);
+  if (action === 'validate') await presetValidate(pos[0]);
+  else if (action === 'add') await presetAdd(pos, opts);
+  else if (action === 'pack') await presetPack(pos, opts);
+  else if (action === 'new') await presetNew(pos, opts);
+  else if (action === 'search') await presetSearch(pos, opts);
+  else if (action === 'install') await presetInstall(pos, opts);
   else if (action === 'list') await presetList(opts);
-  else if (action === 'remove') await presetRemove(args, opts);
+  else if (action === 'remove') await presetRemove(pos, opts);
   else {
     console.error(`未知子命令：${action}`);
     presetHelp();

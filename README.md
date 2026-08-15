@@ -1,6 +1,6 @@
 # dsh-skin-engine 🎨
 
-给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）Web UI 换皮肤的客户端插件。
+给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）Web UI 换皮肤的客户端插件，同时是一个**预设平台**：官方只维护引擎与协议（v1），特效来自社区——任何人按统一格式写好前端代码，就能直接接入、分发，代码归属自己，不会被并入官方。
 
 装上之后，侧边栏底部会出现一个「🎨 换肤中心」按钮。上传一张背景图，插件会自动提取图片的主色、强调色和明暗，把面板、输入框、气泡、菜单、按钮等主题 token 全部换成图片的配色，并叠加跟随光标变化的动态背景。
 
@@ -11,7 +11,7 @@
 - **10 种光标动态背景**：静态、光晕跟随、涟漪扩散、粒子拖尾、极光流动、星空视差，以及 4 个 Genesis 光标引擎预置——量子霓虹（RGB 色散）、液态水银（Verlet 质点链 + 果冻粘连）、星尘引力（引力涡流粒子）、包豪斯网格（网格吸附 + 磁吸边框）
 - **效果调节**：图片不透明度、面板通透度、背景模糊、暗化程度四个滑杆
 - **自动保存**：皮肤（图片 + 全部设置）保存在本机浏览器，刷新页面后自动恢复；图片过大时自动压缩后保存
-- **预设扩展体系**：每个预设是一个独立文件（统一格式），可从换肤中心直接加载、命令行安装，或提交进官方仓库；别人不用写插件，只写特效代码
+- **预设平台**：协议 v1 + 现成接口（`window.__DSH_SKIN_ENGINE__`）+ 社区注册表；别人不用写插件，只写特效代码，一条命令接入/安装
 - **随时还原**：支持移除图片、恢复默认
 - **兼容降级**：运行时自动检测 dsh 客户端能力，缺少主题/插槽接口时降级运行而不是报错
 
@@ -81,16 +81,23 @@ dsh web
 
 工程实现遵循设计文档的性能原则：事件只更新目标坐标、物理与渲染统一由 `requestAnimationFrame` 驱动；DOM 光标用 `translate3d` + `will-change` 走 GPU 合成层；粒子定长预分配，运行时不做 `new`/`push`/`splice`；触摸屏（`(hover: none) and (pointer: coarse)`）自动关闭光标渲染管线以省电。
 
-## 预设扩展体系（自己写特效，不写插件）
+## 预设平台（自己写特效，不写插件）
 
-dsh 客户端插件无法 require 外部文件，所以插件内置了 10 个预设，同时提供**统一的预设格式**：一个 `.js` 文件 = 一套特效，注册到全局注册表即可，不需要了解任何 dsh/Cordis 机制。完整格式文档见 [docs/PRESET_FORMAT.md](docs/PRESET_FORMAT.md)，官方预设的独立形态在 [`presets/`](presets/) 目录（与内置 10 个同源，可直接下载改造）。
+这是一个**主题平台**，不是封闭的内置集合：官方只维护引擎、协议（v1）和 10 个官方示例；**社区预设不并入官方**，任何人的特效以协议兼容的独立包形式接入、分发，代码归属自己。
+
+- **现成的接口**：`window.__DSH_SKIN_ENGINE__`（探测 / `register()` / 工具函数 / 协议版本），协议 v1 承诺向后兼容
+- **规范的格式**：一个 `.js` 文件 = 一套特效，引擎与命令行用同一套校验规则
+- **分发不审核**：任何人 PR [`registry.json`](registry.json) 加一行即上榜，用户一条命令安装；PR 只查格式与可安装性，不看特效代码
 
 ```js
 window.__DSH_SKIN_PRESETS__ = window.__DSH_SKIN_PRESETS__ || {};
 window.__DSH_SKIN_PRESETS__['my-preset'] = {
+  format: 1,              // 协议版本（可选）
   id: 'my-preset',
   name: '我的预设',
   desc: '一句话描述',
+  author: '你的名字',      // 可选，卡片展示
+  version: '1.0.0',       // 可选，卡片展示
   render: function (ctx) {   // 每帧调用；ctx.g 是垫在应用之下的透明 canvas
     ctx.g.arc(ctx.mx, ctx.my, 20, 0, Math.PI * 2);
     ctx.g.fillStyle = 'rgba(255,255,255,0.5)';
@@ -100,24 +107,28 @@ window.__DSH_SKIN_PRESETS__['my-preset'] = {
 };
 ```
 
-三种装载方式：
+完整协议见 [docs/PRESET_FORMAT.md](docs/PRESET_FORMAT.md)；官方示例的独立文件在 [`presets/`](presets/)（可直接下载改造）；上榜指南见 [COMMUNITY.md](COMMUNITY.md)。
+
+三种接入/安装方式：
 
 | 方式 | 操作 | 生效 |
 | --- | --- | --- |
 | 换肤中心 UI | 「＋添加预设」→ 粘贴源码或选择 `.js` 文件 | 立即生效，自动保存到 localStorage |
-| 命令行 | `dsh-skin-engine preset add ./my-preset.js`（支持 URL） | 写入 profile 并注册为独立插件包，重启 dsh 生效 |
-| npm 包 | 作者发布预设包，用户 `dsh plugin --profile web add <包名>` | 重启 dsh 生效 |
+| 命令行（本地） | `dsh-skin-engine preset add ./my-preset.js`（支持 URL） | 写入 profile 并注册为独立插件包，重启 dsh 生效 |
+| 命令行（社区） | `dsh-skin-engine preset search neon` → `preset install my-neon` | 解析注册表 → npm 包 → 安装，重启生效 |
 
 命令行预设工具：
 
 ```bash
-dsh-skin-engine preset validate ./presets/xxx.js   # 校验格式（提 PR 前必跑）
-dsh-skin-engine preset add ./presets/xxx.js        # 安装到 profile
-dsh-skin-engine preset pack ./presets/xxx.js       # 生成可发布 npm 包结构
-dsh-skin-engine preset list / remove <id>          # 管理已安装的预设
+dsh-skin-engine preset new my-neon        # 生成可开发的预设包骨架
+dsh-skin-engine preset validate x.js      # 校验协议（发布前必跑）
+dsh-skin-engine preset add x.js           # 安装本地预设到 profile
+dsh-skin-engine preset pack x.js          # 生成可发布 npm 包结构
+dsh-skin-engine preset search / install   # 社区注册表：发现 / 安装
+dsh-skin-engine preset list / remove <id> # 管理已安装的预设
 ```
 
-**提交你的预设**：复制 `presets/template.js` 改好，跑 `preset validate`，把文件放进 `presets/` 目录提 Pull Request 即可——审核通过后会收录为官方预设（内嵌进插件本体）。**安全提醒**：第三方预设会在你的页面里直接执行，只加载可信来源，UI 加载前有确认提示。
+**发布你的预设**：`preset new` → 写 `render` → `preset validate` → `npm publish` → PR 往 [`registry.json`](registry.json) 加一行（见 [COMMUNITY.md](COMMUNITY.md)）。**安全提醒**：第三方预设会在你的页面里直接执行，引擎不审核代码——只加载可信来源，UI 加载前有确认提示。
 
 ## 常见问题
 
@@ -191,15 +202,18 @@ dsh plugin --profile <profile 名> add @yeesy369/dsh-skin-engine
 | `lib/index.js` | node 半区，空的 `apply`，让插件进入 cordis/Loader |
 | `cordis.patch.yml` | 包被列入 profile bundles 时自动插入 `ui-skin-engine` |
 | `package.json` | 插件元数据、`dsh.client` 声明、`dsh.compat` 兼容范围、`exports` |
-| `dsh-skin-engine.mjs` | 独立安装器（dsh 版本检查 + `preset` 预设子命令） |
-| `presets/` | 官方预设独立形态（10 个）+ `template.js` 模板，均可单独下载/加载 |
-| `docs/PRESET_FORMAT.md` | 预设统一格式文档（第三方写特效的唯一契约） |
+| `dsh-skin-engine.mjs` | 独立安装器（dsh 版本检查 + `preset` 预设平台工具） |
+| `presets/` | 官方示例预设独立形态（10 个）+ `template.js` 模板，均可单独下载/加载 |
+| `registry.json` | 社区预设注册表（任何人 PR 加一行即上榜，引擎不内嵌） |
+| `COMMUNITY.md` | 社区目录：发布流程 + 上榜指南 |
+| `docs/PRESET_FORMAT.md` | 平台协议 v1 文档（格式 + 接口 + 发布规范） |
 
 ## 工作原理
 
 - 插件通过 `theme.overrideTokens` 把 dsh 的主题 token 全量换成从图片提取的配色
 - 背景层是一个 `z-index:-1` 的全屏层，垫在应用内容下面
-- **预设引擎**：所有动画模式统一走 spec 接口（`render(ctx)` + 生命周期钩子），内置预设内嵌、外部预设走 `window.__DSH_SKIN_PRESETS__` 全局注册表、本地自定义预设存 localStorage，三路合一
+- **预设引擎**：所有动画模式统一走 spec 接口（`render(ctx)` + 生命周期钩子），内置示例内嵌、社区预设走 `window.__DSH_SKIN_PRESETS__` 全局注册表、本地自定义预设存 localStorage，三路合一
+- **平台接口**：挂载 `window.__DSH_SKIN_ENGINE__`（协议版本探测 + `register()` + 工具函数），第三方预设按协议 v1 接入，引擎只校验不审核
 - 动态背景绘制在一个全屏 `canvas` 上，用 `requestAnimationFrame` 驱动；事件只更新光标目标坐标，物理与渲染统一在帧循环内完成（文档要求）
 - Genesis 预置遵循性能原则：粒子定长预分配（对象池）、DOM 光标走 `translate3d` + `will-change`、触摸屏自动关闭光标渲染管线
 - 皮肤保存在浏览器 localStorage（`dsh.skin.state.v1` / `dsh.skin.image.v1`），启动时自动恢复，超配额时压缩重试
