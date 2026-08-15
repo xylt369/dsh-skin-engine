@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Theme · Spatial Lens Portal</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    font: 400 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    color: #1d1d1f;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(139,92,246,.10), transparent 60%),
+      radial-gradient(1000px 500px at 90% 10%, rgba(99,102,241,.08), transparent 60%),
+      radial-gradient(800px 600px at 50% 110%, rgba(167,139,250,.10), transparent 60%),
+      #f5f5f7;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 24px 64px;
+  }
+  h1 { font-size: 34px; font-weight: 600; letter-spacing: -.02em; }
+  .sub { margin-top: 10px; font-size: 15px; color: #6e6e73; max-width: 560px; text-align: center; }
+  .panel {
+    margin-top: 48px; padding: 28px; border-radius: 24px;
+    background: rgba(255,255,255,.72);
+    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 1px 1px rgba(0,0,0,.03), 0 12px 40px rgba(0,0,0,.07);
+    border: 1px solid rgba(255,255,255,.8);
+    display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 640px;
+  }
+  [data-agent-action] {
+    appearance: none; border: 0; cursor: pointer;
+    font: 500 14px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    color: #1d1d1f; padding: 12px 22px; border-radius: 980px;
+    background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06);
+    transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s;
+  }
+  [data-agent-action]:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,.07), 0 12px 32px rgba(0,0,0,.09); }
+  [data-agent-action]:active { transform: scale(.96); }
+  .controls { margin-top: 36px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .switch { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: #424245; cursor: pointer; }
+  .switch input { width: 40px; height: 24px; accent-color: #8b5cf6; cursor: pointer; }
+  code { background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
+  .api { margin-top: 8px; font-size: 12.5px; color: #86868b; text-align: center; max-width: 620px; }
+</style>
+</head>
+<body>
+  <h1>Open Theme · 空间透镜</h1>
+  <p class="sub">Apple VisionOS 风格的自定义光标：玻璃透镜 + 动作指示胶囊。把鼠标移到下面的按钮上，透镜会展开成胶囊并显示动作名；按下时轻微下陷；打开开关可看到 Agent 思考态的光环。</p>
+
+  <div class="panel">
+    <button data-agent-action="生成摘要">生成摘要</button>
+    <button data-agent-action="翻译成英文">翻译</button>
+    <button data-agent-action="朗读内容">朗读</button>
+    <button data-agent-action="整理要点">整理要点</button>
+    <button data-agent-action="继续写作">继续写作</button>
+  </div>
+
+  <div class="controls">
+    <label class="switch">
+      <input type="checkbox" id="thinking">
+      <span>Agent 思考态（Apple Intelligence Glow）</span>
+    </label>
+    <div class="api">
+      声明式热区：<code>&lt;button data-agent-action="生成摘要"&gt;</code><br>
+      状态 API：<code>lens.setThinking(true)</code> · 或声明式：<code>&lt;html data-ot-thinking="true"&gt;</code>
+    </div>
+  </div>
+
+  <script src="../presets/portal.js"></script>
+  <script>
+    // 独立模式：自驱动 RAF（autoLoop 默认开启）
+    var lens = new window.PortalLens();
+    lens.start();
+    window.__OT_LENS__ = lens;
+
+    document.getElementById('thinking').addEventListener('change', function (e) {
+      lens.setThinking(e.target.checked);
+    });
+
+    // 声明式 data 属性同样生效（观察 html[data-ot-thinking]）
+    var obs = new MutationObserver(function () {
+      lens.setThinking(document.documentElement.getAttribute('data-ot-thinking') === 'true');
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ot-thinking'] });
+  </script>
+</body>
+</html>
