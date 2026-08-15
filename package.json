@@ -1,6 +1,6 @@
 {
   "name": "@yeesy369/dsh-skin-engine",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "换肤中心 skin-engine：上传背景图作为 DSH 应用皮肤，叠加多种光标交互动态背景（skin / theme / background plugin for DeepSeek Harness web UI）",
   "type": "module",
   "license": "MIT",

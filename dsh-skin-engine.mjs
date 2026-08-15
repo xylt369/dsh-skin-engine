@@ -100,7 +100,7 @@ async function readOwnVersion() {
       // 继续尝试下一个位置
     }
   }
-  return '0.7.0';
+  return '0.8.0';
 }
 
 // ---------- dsh 版本兼容性检查 ----------
