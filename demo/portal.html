@@ -45,8 +45,8 @@
 </style>
 </head>
 <body>
-  <h1>Open Theme · 空间透镜</h1>
-  <p class="sub">Apple VisionOS 风格的自定义光标：玻璃透镜 + 动作指示胶囊。把鼠标移到下面的按钮上，透镜会展开成胶囊并显示动作名；按下时轻微下陷；打开开关可看到 Agent 思考态的光环。</p>
+  <h1>Open Theme · 透镜光标</h1>
+  <p class="sub">Apple VisionOS 风格：鼠标本身就是玻璃透镜（浏览器原生 cursor 渲染，天然圆润、必然显示）。全屏氛围光从背景取色、视差流动。打开开关，光标切换成 Agent 思考态的蓝紫光环透镜——在 dsh 里这一步由 <code>agent/status</code> 自动完成。</p>
 
   <div class="panel">
     <button data-agent-action="生成摘要">生成摘要</button>
@@ -59,18 +59,17 @@
   <div class="controls">
     <label class="switch">
       <input type="checkbox" id="thinking">
-      <span>Agent 思考态（Apple Intelligence Glow）</span>
+      <span>Agent 思考态（光环透镜光标 + 氛围光增强）</span>
     </label>
     <div class="api">
-      声明式热区：<code>&lt;button data-agent-action="生成摘要"&gt;</code><br>
-      状态 API：<code>lens.setThinking(true)</code> · 或声明式：<code>&lt;html data-ot-thinking="true"&gt;</code>
+      状态 API：<code>lens.setThinking(true)</code> · 或声明式：<code>&lt;html data-ot-thinking="true"&gt;</code> · 或 <code>window.__OT_AGENT__ = { running: true }</code>
     </div>
   </div>
 
   <script src="../presets/portal.js"></script>
   <script>
-    // 独立模式：自驱动 RAF（autoLoop 默认开启）；演示页隐藏原生光标、透镜作为光标
-    var lens = new window.PortalLens({ hideNative: true });
+    // 独立模式：自驱动 RAF（autoLoop 默认开启）；透镜 = 浏览器原生光标
+    var lens = new window.PortalLens();
     lens.start();
     window.__OT_LENS__ = lens;
 
