@@ -11,7 +11,7 @@
 - **效果调节**：图片不透明度、面板通透度、背景模糊、暗化程度四个滑杆
 - **自动保存**：皮肤（图片 + 全部设置）保存在本机浏览器，刷新页面后自动恢复；图片过大时自动压缩后保存
 - **自定义特效**：写一个 `.js` 文件就能给自己加一种动态效果（统一格式 + 一键加载），不用写插件；每个预设还可声明可调参数
-- **空间透镜**（首个官方预设）：Apple VisionOS 风格玻璃透镜光标——`data-agent-action` 热区展开动作胶囊、惯性物理插值、点击下陷、Agent 思考态蓝紫光环；可独立运行演示页 [`demo/portal.html`](demo/portal.html)
+- **动态背景**（首个官方预设）：Apple VisionOS 空间光效——玻璃透镜光标 + 全屏氛围光（从图片取色、视差漂移、铺满界面）；`data-agent-action` 热区展开动作胶囊、Agent 思考态蓝紫光环；可独立运行演示页 [`demo/portal.html`](demo/portal.html)
 - **随时还原**：支持移除图片、恢复默认
 - **兼容降级**：运行时自动检测 dsh 客户端能力，缺少主题/插槽接口时降级运行而不是报错
 
@@ -70,7 +70,7 @@ dsh web
 
 ## 怎么自己加特效
 
-想给 Open Theme 加一种自己的动态效果？**一个 `.js` 文件就够了**，格式见 [docs/PRESET_FORMAT.md](docs/PRESET_FORMAT.md)。首个官方预设「空间透镜」就长这样——完整代码在 [`presets/portal.js`](presets/portal.js)，演示页 [`demo/portal.html`](demo/portal.html) 可双击直接运行：
+想给 Open Theme 加一种自己的动态效果？**一个 `.js` 文件就够了**，格式见 [docs/PRESET_FORMAT.md](docs/PRESET_FORMAT.md)。首个官方预设「动态背景」就长这样——完整代码在 [`presets/portal.js`](presets/portal.js)，演示页 [`demo/portal.html`](demo/portal.html) 可双击直接运行：
 
 ```js
 // my-preset.js
@@ -182,8 +182,8 @@ dsh plugin --profile <profile 名> add @yeesy369/open-theme
 | `cordis.patch.yml` | 包被列入 profile bundles 时自动插入 `ui-open-theme` |
 | `package.json` | 插件元数据、`dsh.client` 声明、`dsh.compat` 兼容范围、`exports` |
 | `open-theme.mjs` | 独立安装器（dsh 版本检查 + `preset` 自定义预设工具） |
-| `presets/` | `template.js` 预设模板 + `portal.js` 空间透镜（独立版，可下载加载/做演示） |
-| `demo/portal.html` | 空间透镜演示页（浏览器直接打开即可运行） |
+| `presets/` | `template.js` 预设模板 + `portal.js` 动态背景（独立版，可下载加载/做演示） |
+| `demo/portal.html` | 动态背景演示页（浏览器直接打开即可运行） |
 | `docs/PRESET_FORMAT.md` | 自定义预设格式规范（字段、ctx、加载方式） |
 
 ## 工作原理

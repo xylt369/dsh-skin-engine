@@ -1,6 +1,6 @@
 {
   "name": "@yeesy369/open-theme",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Open Theme：给 DeepSeek Harness（dsh）Web UI 换皮肤的客户端插件——上传背景图自动取色换肤，支持自定义特效预设（skin / theme / background plugin for DeepSeek Harness web UI）",
   "type": "module",
   "license": "MIT",
