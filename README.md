@@ -144,16 +144,6 @@ dsh plugin --profile web remove @yeesy369/open-theme
 
 然后重启 `dsh web`。已保存的皮肤数据会留在浏览器 localStorage 里，如需一并清除，可在卸载前先点一次「恢复默认」。
 
-### 能装到别的 profile 吗？
-
-可以，把命令里的 `web` 换成你的 profile 名：
-
-```bash
-dsh plugin --profile <profile 名> add @yeesy369/open-theme
-```
-
-不过这是 Web UI 插件，建议装在 `web` profile。
-
 ## 兼容性
 
 | 项 | 说明 |
